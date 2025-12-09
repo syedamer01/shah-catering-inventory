@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SHAH Catering and Cooking Service</title>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<style>
+body{font-family:'Segoe UI',Arial,sans-serif;background:#fffaf2;margin:0;padding:20px;}
+h1{text-align:center;color:#fff;background:#800000;padding:12px;border-radius:8px;margin-bottom:4px;}
+.subtitle{text-align:center;line-height:1.4em;margin-bottom:20px;}
+.top-bar{text-align:center;margin:15px 0;}
+button{padding:8px 14px;border:none;border-radius:5px;color:#fff;font-size:15px;cursor:pointer;margin:3px;}
+.download{background:#006400;} .download:hover{background:#004d00;}
+.reset{background:#a52a2a;} .reset:hover{background:#800000;}
+.category{background:#fff;border:2px solid #800000;border-radius:8px;margin-top:20px;box-shadow:0 2px 5px rgba(0,0,0,.1);}
+.category h2{background:#800000;color:#fff;margin:0;padding:10px 12px;border-radius:5px 5px 0 0;font-size:1.1em;}
+table{width:100%;border-collapse:collapse;}
+th,td{border:1px solid #d2b48c;padding:6px;font-size:15px;}
+th{background:#f7e4c4;}
+input[type="text"],input[type="number"]{width:95%;padding:4px;border:1px solid #ccc;border-radius:4px;}
+.addBtn{background:#b8860b;color:#fff;margin:8px;} .addBtn:hover{background:#a67c00;}
+th,td {
+  border: 1px solid #d2b48c;
+  padding: 6px;
+  font-size: 15px;
+  vertical-align: middle;
+}
+th {background:#f7e4c4;}
+
+/* Smaller Qty and Unit columns */
+td:nth-child(2), td:nth-child(3) {
+  width: 90px;
+  text-align: center;
+}
+
+/* Urdu in its own block line */
+td input[type="text"] {
+  display: block;
+  width: 95%;
+  margin: 2px auto;
+  text-align: left;
+}
+
+/* Quantity and unit smaller inputs */
+input[type="number"] {
+  width: 80%;
+  padding: 2px 4px;
+  text-align: center;
+}
+input[type="text"][placeholder="Unit"] {
+  width: 80%;
+  text-align: center;
+  /* Separate English and Urdu into two rows inside the same cell */
+/* English + Urdu side by side in one row */
+.item-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.item-flex input[type="text"] {
+  flex: 1;
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 15px;
+}
+
+.item-flex input.urdu {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',serif;
+  font-size: 16px;
+  color: #4b2e00;
+}
+/* Urdu input field on a second row */
+td input[type="text"].urdu {
+  direction: rtl;
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', serif;
+  text-align: right;
+  display: block;
+  width: 95%;
+  margin: 2px auto 5px;
+  color: #4b2e00;
+  font-size: 16px;
+}
+}
+</style>
+</head>
+<body>
+<h1>SHAH Catering and Cooking Service</h1>
+<div class="subtitle">
+(Ustad) Syed Farooq — 9393042305 &nbsp;|&nbsp;
+(Ustad) Syed Shabbir — 9966408151 &nbsp;|&nbsp;
+(Ustad) Syed Ameer — 9059715077
+</div>
+
+<div class="top-bar">
+  <button class="download" id="downloadPdf">🧾 Download PDF</button>
+  <button class="reset" id="resetAll">🔄 Reset All</button>
+</div>
+
+<div id="inventory"></div>
+
+<script>
+const {jsPDF}=window.jspdf;
+const STORAGE_KEY="shah_inventory_full";
+const baseInventory={
+"TARKARI | ترکاری":[
+"Kotmir Choti | کوٹمیر چھوٹی, bunch",
+"Pudina | پودینہ, bunch",
+"Karyapak | کری پتہ, bunch",
+"Barik Mirchi | باریک مرچ, kg",
+"Moti Mirchi | موٹی مرچ, kg",
+"Tomato Desi | ٹماٹر دیسی, kg",
+"Tomato Bengaluri | ٹماٹر بنگلور, kg",
+"Choti Methi | چھوٹی میتھی, bunch",
+"Limbu | لیموں, pcs",
+"Karna Bada | کرنا بڑا, pcs",
+"Aalu | آلو, kg",
+"Baigan Medium | بینگن درمیانہ, kg",
+"Kachi Papai | کچی پپیتا, kg",
+"Kaddu Osat | کدو اوسط, kg",
+"Phalli Biniz | پھلی بینز, kg",
+"Phalli Gawar | پھلی گوار, kg",
+"Soya Ki Bhaji | سویا کی بھاجی, bunch",
+"Mat Ki Bhaji | مات کی بھاجی, bunch",
+"Amrican Gobi | امریکن گوبھی, kg",
+"Shimla Mirchi Red | شملہ مرچ لال, kg",
+"Shimla Mirchi Green | شملہ مرچ ہری, kg",
+"Shimla Mirchi Yellow | شملہ مرچ پیلی, kg",
+"Moouz Ka Patta | موز کا پتہ, pcs",
+"Salad Ka Patta | سلاد کا پتہ, pcs",
+"Gajar Bada Bengaluri | گاجر بڑا بنگلور, kg",
+"Muli | مولی, kg",
+"Chukander | چقندر, kg",
+"Kheera Bada | کھیرہ بڑا, kg",
+"Gobi Band | گوبھی بند, kg",
+"Hari Piyaz ki Patti | ہری پیاز کی پتی, bunch",
+"Ghajar Desi | گاجر دیسی, kg"
+],
+"MEATS | گوشت":[
+"Gosht Biryani | گوشت بریانی, kg",
+"Gosht Marag | گوشت مرق, kg",
+"Gosht Bagair Hadi | گوشت بغیر ہڈی, kg",
+"Gosht Haleem | گوشت حلیم, kg",
+"Kheema Barik | قیمہ باریک, kg",
+"Zaban | زبان, kg",
+"Chicken Kheema | چکن قیمہ, kg",
+"Fish Boneless | مچھلی بغیر کانٹا, kg",
+"Paya | پایہ, pcs",
+"Fish Zinda | زندہ مچھلی, kg",
+"Jhinga | جھینگا, kg",
+"Chicken Zinda Anda (Egg) | چکن زنده انڈہ, pcs",
+"Bateir | بٹیر, pcs",
+"Bakra Sabit | بکرا ثابت, pcs"
+],
+"DAIRY ITEMS | دودھ مصنوعات":[
+"Milk | دودھ, ltr",
+"Chak Ka Dahi | دہی, kg",
+"Khowa Fresh | کھویا فریش, kg",
+"Cream | کریم, ltr",
+"Malai Fresh | ملائی فریش, kg",
+"Paneer | پنیر, kg",
+"Milk Tea Ka | دودھ چائے کا, ltr",
+"Ice Cream | آئس کریم, ltr",
+"Sponge Cake | اسفنج کیک, pcs"
+],
+"FRUITS | فروٹس":[
+"Mouz | کیلا, dozen",
+"Sep Deletion | سیب, kg",
+"Angur Bedana | انگور بے دانہ, kg",
+"Angur Kala | انگور کالا, kg",
+"Mosambi Badi | موسمبی بڑی, kg",
+"Sapota Bada | چیکو بڑا, kg",
+"Aam Rasal | آم رسل, kg",
+"Aam Himayath | آم حمایت, kg",
+"Kharbuza Laddu | خربوزہ لڈو, kg",
+"Anar | انار, kg",
+"Pineapple | انناس, pcs",
+"Dragon Fruit | ڈریگن فروٹ, pcs",
+"Malta Orange | مالٹا, kg",
+"Tarbooz | تربوز, kg",
+"Sitafal Pulp | سیتافل پلپ, kg",
+"Shaidood | شہدود, kg"
+],
+"KIRANA ITEMS | کریانہ":[
+"Rice Amritsar | چاول امرتسر, kg",
+"Ghee Dalda | گھی ڈالڈا, kg",
+"Asli Ghee (Masqati) | اصلی گھی (مسقطی), kg",
+"Refind Oil | ریفائنڈ آئل, ltr",
+"Rang Zafrani | رنگ زعفرانی, g",
+"Jovt Jotri | جاوت جوتری, g",
+"Long | لونگ, g",
+"Elaichi Hari | الائچی ہری, g",
+"Shazeera | زیرہ, g",
+"Dalchini | دار چینی, g",
+"Kabab Chini | کباب چینی, g",
+"Kali Mirchi Sabit | کالی مرچ ثابت, g",
+"Zera Sabit | زیرہ ثابت, g",
+"Dhaniya Sabit | دھنیا ثابت, g",
+"Dhaniya Powder | دھنیا پاؤڈر, g",
+"Zeera Powder | زیرہ پاؤڈر, g",
+"Kali Mirchi Powder | کالی مرچ پاؤڈر, g",
+"Till Safaid | تل سفید, g",
+"Phalli Mong | پھلی مونگ, kg",
+"Khopra Powder | کھوپرا پاؤڈر, g",
+"Chironji | چرنجي, g",
+"Kaju Churah | کاجو چورا, g",
+"Badam | بادام, g",
+"Pista | پستہ, g",
+"Kaju Solid | کاجو, g",
+"Kishmish | کشمش, g",
+"Zafrani Asli | زعفران اصلی, g",
+"Akhrot Maghaz | اخروٹ مغز, g",
+"Dry Anjeer | خشک انجیر, g",
+"Shakar Powder | شکر پاؤڈر, kg",
+"Shakar | شکر, kg",
+"Potli Ka Masala | پوٹلی کا مسالہ, g",
+"Mirchi Powder | مرچ پاؤڈر, g",
+"Mirchi Achar Powder | مرچ اچار پاؤڈر, g",
+"Haldi Powder | ہلدی پاؤڈر, g",
+"Namak Mota | نمک موٹا, kg",
+"Namak Barik | نمک باریک, kg",
+"Sabudana | ساگودانہ, kg",
+"Besan Aata | بیسن آٹا, kg",
+"Maida | میدہ, kg",
+"Aata Giyahon | آٹا گیہوں, kg",
+"Bombay Aata | بمبئی آٹا, kg",
+"Jawari Aata | جواری آٹا, kg",
+"Dry Yeast Masala | ڈرائی خمیر مسالہ, g",
+"Bread Metha ki (Rose Bakery) | بریڈ میتھی کی (روز بیکری), pcs",
+"Angoor Dana | انگور دانہ, g",
+"Khurbaani Safaid | خوبانی سفید, g",
+"Warq Nagrawi Bada | ورق نگروا بڑا, pcs",
+"Adrak Lehsan (Swagat) | ادرک لہسن (سواگت), g",
+"Shahed Dabar | شہد دابر, ml",
+"Milk Maid | ملک میڈ, tin",
+"Tuty Fruit Red | ٹوٹی فروٹی سرخ, g",
+"Tooti Frooti Green | ٹوٹی فروٹی سبز, g",
+"Butter Amul | مکھن امول, g",
+"Conflex | کارن فلیکس, box",
+"Bread Crums (Panko) | بریڈ کرمز (پینکو), g",
+"Amul Cheese | امول چیز, g",
+"Amchur Powder | آمچور پاؤڈر, g",
+"Tanduri Masala | تندوری مسالہ, g",
+"Badsha Garam Masala | بادشاہ گرم مسالہ, g",
+"Salad Oil | سلاد آئل, ltr",
+"Mayonaisse | مایونیز, jar",
+"Chaat Masala | چاٹ مسالہ, g",
+"Limbu Salt | لیموں نمک, g",
+"Mustard Oil | سرسوں کا تیل, ltr",
+"White Paper (Sabit) | سفید مرچ (ثابت), g",
+"Fish Masala | مچھلی مسالہ, g",
+"Fish 2 Fish Sos | فش ٹو فش سوس, bottle",
+"Chicken Sticks | چکن اسٹکس, pack",
+"Bombay Sticks | بمبئی اسٹکس, pack",
+"Shezawan Sos | شیزوان سوس, bottle",
+"Tost Ka Powder | ٹوسٹ کا پاؤڈر, g",
+"Rawa Bombay | راوا بمبئی, kg",
+"Rawa Haleem Barik | راوا حلیم باریک, kg",
+"Corn Flour (Wick Fild) | کارن فلور (وک فیلڈ), g",
+"Imli Nai | املی نئی, g",
+"Piyaz | پیاز, kg",
+"Karan Phool | کرن پھول, g",
+"Marwadi Mathi | مارواڑی میتھی, g",
+"Dry Limbu | خشک لیموں, g",
+"Badi Elaichi | بڑی الائچی, g",
+"Kala Namak Powder | کالا نمک پاؤڈر, g",
+"Zaitoon Oil | زیتون کا تیل, ltr",
+"Zaitoon Black Piece | زیتون سیاہ, pcs",
+"Zaitoon Green Piece | زیتون سبز, pcs",
+"Gound | گوند, g",
+"Khas Ki Jardh | خاص کی جڑ, g",
+"Pan Ki Jardh | پان کی جڑ, g",
+"Gurdh | گڑ, kg",
+"Gulab Kali | گلاب کلی, g",
+"Baking Powder | بیکنگ پاؤڈر, g",
+"Nahari Masala (Banne nawab's) | نہاری مسالہ (بنے نواب), g",
+"Barbeque Masala | باربی کیو مسالہ, g",
+"Khane Ka Soda | کھانے کا سوڈا, g",
+"Sharbati Gehu | شربتی گندم, kg",
+"Chilli Flakes | مرچ کے فلیکس, g",
+"Bush Color Red | رنگ سرخ, g",
+"Yellow Color | رنگ پیلا, g",
+"Orange Assence | نارنجی ایسنس, ml",
+"Pineapple Assence | انناس ایسنس, ml",
+"Vanilla Assence | ونیلا ایسنس, ml",
+"Gulab Assence | گلاب ایسنس, ml",
+"Mango Assence | آم ایسنس, ml",
+"Kewra Water | کیوڑہ واٹر, ml",
+"Jelding Powder (Sada) | جیلیڈنگ پاؤڈر (سادہ), g",
+"Pineapple Slice | انناس سلائس, tin",
+"Lichi Tin | لیچی ٹن, tin",
+"Mix Fruit Tin (Delmount) | مکس فروٹ ٹن (ڈلماؤنٹ), tin",
+"Mango Pulp | آم پلپ, tin",
+"Batana Tin | بٹانا ٹن, tin",
+"Butter Paper | بٹر پیپر, pcs",
+"Red Cherry Sukhi | سرخ چیری سوکھی, g",
+"Mix Fruit Jam | مکس فروٹ جام, jar",
+"Orange Sharbat | نارنجی شربت, bottle",
+"Red Color | رنگ سرخ, g",
+"Green Color | رنگ سبز, g",
+"Apple Green Color | ایپل گرین رنگ, g",
+"Tomato Sauce | ٹماٹر ساس, bottle",
+"Tomato Puri | ٹماٹر پیوری, bottle",
+"Red Chilli Sos | لال مرچ سوس, bottle",
+"Green Chilli Sos | سبز مرچ سوس, bottle",
+"Wester Sos | ویسٹر سوس, bottle",
+"Sirka White | سفید سرکہ, bottle",
+"Capsicum Sos | کیپسیکم سوس, bottle",
+"Adrak | ادرک, kg",
+"Lahsan | لہسن, kg",
+"Sukhi Mirchi (Sabit) | خشک مرچ (ثابت), g",
+"Rai | رائی, g",
+"Methi Kalonji | میتھی کلونجی, g",
+"Mandi Masala | مندی مسالہ, g",
+"Daal Masur | دال مسور, kg",
+"Daal Phula Chana | دال پھلا چنا, kg",
+"Daal Chana | دال چنا, kg",
+"Daal Mash | دال ماش, kg",
+"Daal Tuwar | دال تور, kg",
+"Kabuli Chana | کابلی چنا, kg",
+"Rice Masuri | چاول مسوری, kg",
+"Custard Powder (Wick Fild) | کسٹرڈ پاؤڈر (وک فیلڈ), g",
+"Mango Custard Powder (Wick Fild) | آم کسٹرڈ پاؤڈر (وک فیلڈ), g",
+"Rooh Afza | روح افزا, bottle",
+"Strawberry Crush | اسٹرابیری کرش, bottle",
+"Custard Apple | کسٹرڈ ایپل, pcs",
+"Mango Crush | آم کرش, bottle",
+"Chocolate Syrup | چاکلیٹ سیرپ, bottle",
+"Wafer Biscuit | ویفر بسکٹ, pack",
+"Litchi Crush | لیچی کرش, bottle",
+"Amul Spray Powder | امول اسپرے پاؤڈر, g",
+"Sukka Jhinga | سوکھا جھینگا, kg",
+"Khajoor | کھجور, kg"
+],
+"OTHERS | دیگر":[
+"Lakdi Barik Sukhi | لکڑی باریک سوکھی, pcs",
+"Koila Bada | کوئلہ بڑا, kg",
+"Gas | گیس, cyl",
+"Matti Ke Kadai | مٹی کے کڑاہی, pcs",
+"Matti Ke Handi | مٹی کے ہانڈی, pcs",
+"Ice | برف, kg",
+"Cooking Water | ککنگ واٹر, ltr",
+"Aalu Chips Sada | آلو چپس سادہ, pack",
+"Milk Bread Badi | ملک بریڈ بڑی, pack",
+"Mixer Grinder (ghar Ka) | مکسر گرائنڈر (گھر کا), pcs",
+"Tokri Pasau | ٹوکری پساو, pcs",
+"Soop | سوپ, pcs",
+"Channi 3 Jali | چھنی 3 جالی, pcs",
+"Wheel Powder | وہیل پاؤڈر, pack",
+"Kapra Malmal | کپڑا ململ, m",
+"Kapra Khadi | کپڑا کھادی, m",
+"Kapra Ghaj | کپڑا گھج, m",
+"Tissue Paper Box | ٹشو پیپر باکس, box",
+"Small Soap | چھوٹا صابن, pcs",
+"Plastic | پلاسٹک, pack",
+"Sponge | اسفنج, pcs",
+"Pin Box | پن باکس, box",
+"Glass Pani | گلاس پانی, pcs",
+"Tajmahal Patti | تاج محل پتی, pack",
+"Tea Cup | چائے کپ, pcs",
+"Bournvita | بورن ویٹا, jar",
+"Clean Rap | کلین ریپ, roll",
+"Aate Ka Bhusa | آٹے کا بھوسا, bag",
+"Cadburry Chocolate Ball | کیڈبری چاکلیٹ بال, pack",
+"Barik Soaf | باریک سونف, g",
+"Silver Roll | سلور رول, roll",
+"Silver Packet | سلور پیکٹ, pack",
+"Chatni Cup | چٹنی کپ, pcs",
+"Spoon | چمچ, pcs",
+"Umbrella Stick | چھتری اسٹک, pcs",
+"French Fry Potato | فرنچ فرائی آلو, kg",
+"Pakwan ka Pani | پکوان کا پانی, ltr"
+]
+}; // END of baseInventory
+
+
+// ---------- JS functions ----------
+let inventoryData = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || baseInventory;
+const container = document.getElementById("inventory");
+
+function createCategory(name, items) {
+  const div = document.createElement("div");
+  div.className = "category";
+  div.innerHTML = `
+    <h2>${name}</h2>
+    <table>
+      <thead>
+        <tr><th>Item (English | اردو)</th><th>Qty</th><th>Unit</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div style='text-align:center;'><button class='addBtn'>➕ Add Item</button></div>
+  `;
+
+  const tbody = div.querySelector("tbody");
+
+  // build each row
+  items.forEach(it => {
+    const [item, unit] = it.split(",");
+    const [eng, urd] = item.split("|");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>
+        <div class="item-flex">
+          <input type='text' value='${eng ? eng.trim() : ""}' placeholder='English'>
+          <input type='text' class='urdu' value='${urd ? urd.trim() : ""}' placeholder='اردو'>
+        </div>
+      </td>
+      <td><input type='number' min='0' step='0.1' placeholder='0'></td>
+      <td><input type='text' value='${unit ? unit.trim() : ""}' placeholder='Unit'></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // add new item row
+  div.querySelector(".addBtn").addEventListener("click", () => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>
+        <div class="item-flex">
+          <input type='text' placeholder='English Item'>
+          <input type='text' class='urdu' placeholder='اردو آئٹم'>
+        </div>
+      </td>
+      <td><input type='number' min='0' step='0.1' placeholder='0'></td>
+      <td><input type='text' placeholder='Unit'></td>
+    `;
+    tbody.appendChild(tr);
+    saveData();
+  });
+
+  container.appendChild(div);
+}
+
+// render all categories
+function render() {
+  container.innerHTML = "";
+  for (const [cat, items] of Object.entries(inventoryData)) createCategory(cat, items);
+}
+render();
+
+// save to localStorage
+function saveData() {
+  const data = {};
+  document.querySelectorAll(".category").forEach(sec => {
+    const cat = sec.querySelector("h2").innerText.trim();
+    const rows = sec.querySelectorAll("tbody tr");
+    data[cat] = [];
+    rows.forEach(r => {
+      const eng = r.querySelectorAll(".item-flex input")[0].value || "-";
+      const urd = r.querySelectorAll(".item-flex input")[1].value || "";
+      const unit = r.children[2].querySelector("input").value || "-";
+      if (eng) data[cat].push(`${eng} | ${urd}, ${unit}`);
+    });
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+document.addEventListener("input", e => { if (e.target.tagName === "INPUT") saveData(); });
+
+// reset inventory
+document.getElementById("resetAll").addEventListener("click", () => {
+  if (confirm("Clear all data and reset inventory?")) {
+    localStorage.removeItem(STORAGE_KEY);
+    inventoryData = JSON.parse(JSON.stringify(baseInventory));
+    render();
+  }
+});
+
+// download PDF
+document.getElementById("downloadPdf").addEventListener("click", () => {
+  const doc = new jsPDF();
+  let y = 20;
+  doc.setFontSize(16);
+  doc.text("SHAH Catering Inventory Report", 14, y);
+  y += 8;
+  for (const sec of document.querySelectorAll(".category")) {
+    const head = sec.querySelector("h2").innerText;
+    doc.setFontSize(12);
+    doc.text(head, 14, y);
+    y += 6;
+    doc.setFontSize(10);
+    sec.querySelectorAll("tbody tr").forEach((r, i) => {
+      const eng = r.querySelectorAll(".item-flex input")[0].value || "-";
+      const urd = r.querySelectorAll(".item-flex input")[1].value || "";
+      const qty = r.children[1].querySelector("input").value || "0";
+      const unit = r.children[2].querySelector("input").value || "";
+      doc.text(`${i + 1}. ${eng} | ${urd} — ${qty} ${unit}`, 18, y);
+      y += 6;
+      if (y > 280) { doc.addPage(); y = 20; }
+    });
+    y += 4;
+  }
+  doc.save("SHAH_Catering_Inventory.pdf");
+});
+</script>
+</body>
+</html>
